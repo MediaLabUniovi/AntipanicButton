@@ -1,0 +1,99 @@
+const express = require('express');
+const axios = require('axios');
+const bodyParser = require('body-parser');
+const twilio = require('twilio');
+require('dotenv').config();  // Para cargar las variables de entorno desde .env
+
+const app = express();
+const port = 3000;
+
+// Configuración del servidor para manejar solicitudes JSON
+app.use(bodyParser.json());
+
+// Configura Twilio para enviar mensajes de WhatsApp
+const client = new twilio(
+    process.env.TWILIO_ACCOUNT_SID,   // Tu Account SID de Twilio
+    process.env.TWILIO_AUTH_TOKEN     // Tu Auth Token de Twilio
+);
+
+// Endpoint para recibir los uplinks de TTN
+app.post('/webhooks', (req, res) => {
+    const uplinkMessage = req.body;
+
+    console.log('Uplink recibido:', uplinkMessage);
+
+    // Si el uplink tiene un payload de la alerta (puedes poner más lógica si es necesario)
+    if (uplinkMessage && uplinkMessage.uplink_message && uplinkMessage.uplink_message.f_port === 1) {
+        console.log('Uplink con f_port 1 recibido. Enviando downlink...');
+
+        sendDownlinkToTTN(uplinkMessage);  // Llama a la función para enviar el downlink
+        sendWhatsAppAlert();  // Enviar alerta de WhatsApp
+    } else {
+        console.log('Uplink no es válido o no tiene f_port 1');
+    }
+
+    res.status(200).send('OK');
+});
+
+// Función para enviar el downlink a TTN
+function sendDownlinkToTTN(uplinkMessage) {
+    const downlinkPayload = {
+        downlinks: [
+            {
+                frm_payload: "AQ==",  // Aquí se envía el dato '1' en Base64 (ejemplo)
+                f_port: 1,           // Puerto de la aplicación (debe ser 1 si ese es el puerto que usas)
+                priority: "NORMAL"    // Prioridad del downlink
+            }
+        ]
+    };
+
+    // La URL de la API de TTN para enviar downlinks (reemplaza los valores con tu información)
+    const url = `https://eu1.cloud.thethings.network/api/v3/as/applications/boton-del-panico/webhooks/panic-button/devices/panic-button/down/push`;
+
+    // API Key de TTN (reemplaza con tu API Key)
+    const apiKey = 'Bearer NNSXS.S7NLX6NYXL6WSDOGIE2AUTMXZ2MSHGH4AQZPKMQ.QF5LE5D32KSVVTHAYEQ4H6KSCG4UU4SQIZSXN2TRJVZHZNH5KF4A';
+
+    // Hacer la solicitud POST a TTN para enviar el downlink
+    axios.post(url, downlinkPayload, {
+        headers: {
+            'Authorization': apiKey,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        console.log('Downlink enviado:', response.data);
+    })
+    .catch(error => {
+        console.error('Error al enviar downlink:', error.response ? error.response.data : error.message);
+    });
+}
+
+// Función para enviar un mensaje de WhatsApp
+function sendWhatsAppAlert() {
+    const message = `🚨 *¡Botón de pánico presionado!* 🚨\nSe ha activado una alerta. Por favor, revisa la situación.`
+
+   // Elimina cualquier espacio extra de los números en el .env
+    const fromNumber = process.env.TWILIO_WHATSAPP_NUMBER.trim(); 
+    const toNumber = process.env.MI_NUMERO_WHATSAPP.trim();
+
+    // Asegúrate de que los números estén bien formateados
+    console.log("Enviando desde:", fromNumber);
+    console.log("Enviando a:", toNumber);
+
+    client.messages.create({
+        from: fromNumber,  // Número de WhatsApp de Twilio
+        to: toNumber,      // Tu número de WhatsApp
+        body: message
+    })
+    .then(message => {
+        console.log('✅ Alerta de WhatsApp enviada:', message.sid);
+    })
+    .catch(error => {
+        console.error('❌ Error al enviar WhatsApp:', error.message);
+    });
+}
+
+// Inicia el servidor en el puerto 3000
+app.listen(port, () => {
+    console.log(`Servidor corriendo en http://localhost:${port}`);
+});
