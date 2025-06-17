@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Botón de Pánico - Mapa</title>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    body, html { margin: 0; padding: 0; height: 100%; }
+    #map { width: 100%; height: 90%; }
+    #panic-button { width: 100%; height: 10%; font-size: 20px; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <button id="panic-button">Botón de Pánico</button>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const map = L.map('map').setView([0, 0], 2);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+
+      let marker;
+
+      // Conexión WebSocket segura usando wss
+      const ws = new WebSocket('wss://9e23-46-222-0-187.ngrok-free.app');  // Usa tu URL de ngrok aquí
+
+      ws.onopen = () => {
+        console.log('✅ Conectado a WebSocket');
+      };
+
+      ws.onerror = (err) => {
+        console.error('❌ WebSocket error:', err);
+      };
+
+      ws.onclose = () => {
+        console.warn('⚠️ WebSocket cerrado');
+      };
+
+      // Escuchar los mensajes enviados desde el servidor WebSocket
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log('Datos recibidos del servidor:', data);
+
+        const { lat, lon, time } = data;
+
+        if (typeof lat === 'number' && typeof lon === 'number') {
+          // Si ya hay un marcador, eliminarlo
+          if (marker) map.removeLayer(marker);
+          // Crear y mostrar el nuevo marcador
+          marker = L.marker([lat, lon]).addTo(map)
+            .bindPopup(`🚨 Alerta de pánico<br>${time || 'Sin hora'}`)
+            .openPopup();
+          // Centrar el mapa en las nuevas coordenadas
+          map.setView([43.5239580, -5.6348538], 15);
+        } else {
+          console.warn('Coordenadas inválidas recibidas:', data);
+          alert('⚠️ El servidor respondió, pero las coordenadas no son válidas.');
+        }
+      };
+
+      // Al hacer clic en el botón de pánico, enviar un mensaje a través de WebSocket
+      document.getElementById('panic-button').addEventListener('click', () => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send('Solicitud de coordenadas');  // Puedes enviar un mensaje a tu servidor si es necesario
+        } else {
+          console.error('WebSocket no está abierto');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

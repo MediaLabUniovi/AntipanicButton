@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Botón de Pánico</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            text-align: center;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Comando para el Botón de Pánico</h2>
+        <input type="text" id="commandInput" placeholder="Escribe un comando (por ejemplo, '02')" />
+        <br><br>
+        <button class="button" onclick="sendCommand()">Enviar Comando</button>
+    </div>
+
+    <script>
+        function sendCommand() {
+            const command = document.getElementById("commandInput").value.trim();
+
+            if (!command) {
+                alert("Por favor, ingresa un comando.");
+                return;
+            }
+
+            fetch('https://5450-83-53-173-161.ngrok-free.app/operator-command', {  // ✅ URL corregida
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ command })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Error del servidor: ${response.statusText}`);
+                }
+                return response.text();  // ✅ Se usa `.text()` en vez de `.json()` para evitar errores
+            })
+            .then(data => {
+                alert('Comando enviado con éxito: ' + data);
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert('Error al enviar el comando: ' + error.message);
+            });
+        }
+    </script>
+</body>
+</html>
