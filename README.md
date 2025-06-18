@@ -6,7 +6,7 @@ Este proyecto implementa un sistema de alerta de emergencia basado en una placa 
 
 ---
 
-## 📟 Frontend (Código del Dispositivo)
+## Frontend (Código del Dispositivo)
 
 El código implementado en la LilyGO está desarrollado en **Arduino IDE** y maneja distintos módulos de hardware, cada uno con su función dedicada:
 
@@ -20,11 +20,11 @@ El código implementado en la LilyGO está desarrollado en **Arduino IDE** y man
 
 ---
 
-## 🌐 Backend (Servidor Local)
+## Backend (Servidor Local)
 
 El backend está desarrollado en **Node.js** y corre de forma **local en el ordenador del operador**. Para poder recibir datos desde The Things Stack (TTN), se emplea **Ngrok**, que permite exponer el servidor local a Internet mediante una URL pública segura por HTTPS.
 
-> **⚠️ Requisitos:**  
+> **Requisitos:**  
 > - Tener **Node.js** instalado.  
 > - Ejecutar `npm install` para instalar todas las dependencias (`express`, `axios`, `dotenv`, etc.).
 > - Ejecutar server con node server.js
@@ -33,7 +33,7 @@ El backend está desarrollado en **Node.js** y corre de forma **local en el orde
 
 ---
 
-## 🧠 Funciones del Backend
+## Funciones del Backend
 
 ### `sendDownlink`
 Genera y envía un **mensaje de respuesta (downlink)** a la LilyGO a través de la API de TTN. Se utiliza para controlar acciones en el dispositivo como encender LEDs o reproducir audios.
@@ -49,7 +49,7 @@ Envía un **mensaje de WhatsApp** usando la API de Twilio. Se utiliza para avisa
 
 ---
 
-## 🖥️ Interfaces Web
+## 🖥Interfaces Web
 
 ### `index.html`
 Interfaz sencilla en la que el operador puede introducir un código que representa el estado de la alerta. Por ejemplo:
@@ -61,7 +61,7 @@ Interfaz que muestra sobre un mapa la **ubicación GPS** de la persona que ha ac
 
 ---
 
-## 🔐 Seguridad
+## Seguridad
 
 - Todas las claves (Twilio, ClickSend, TTN...) se almacenan en un archivo `.env`, nunca en el código fuente.
 - Las comunicaciones entre TTN, Ngrok y el servidor se realizan por **HTTPS**.
@@ -70,7 +70,7 @@ Interfaz que muestra sobre un mapa la **ubicación GPS** de la persona que ha ac
 
 ---
 
-## 📲 Comunicación Bluetooth de Respaldo
+## Comunicación Bluetooth de Respaldo
 
 En caso de que no haya confirmación de transmisión por LoRa:
 - El dispositivo envía `"PANIC_ALERT"` por Bluetooth clásico.
@@ -79,7 +79,7 @@ En caso de que no haya confirmación de transmisión por LoRa:
 
 ---
 
-## 💡 Notas
+## Notas
 
 - El backend fue probado en entorno **localhost**, accesible desde TTN gracias a **Ngrok**.
 - El sistema puede seguir ampliándose con autenticación avanzada, más sensores, o integración con bases de datos.
